@@ -1,0 +1,6 @@
+{
+  "name": "SafeTube",
+  "description": "SafeTube - ডিস্ট্র্যাকশন-মুক্ত ও নিরাপদ ভিডিও স্ট্রিমিং ও অডিও ব্যাকগ্রাউন্ড প্লেয়ার PWA অ্যাপ। গুগল শিট ভিত্তিক কিউরেটেড ভিডিও এবং কোনো এক্সটার্নাল সাজেশন ছাড়া নিখুঁত অভিজ্ঞতা।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
