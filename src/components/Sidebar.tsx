@@ -143,7 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           >
             <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin text-red-600' : ''}`} />
             <span className={`${!isOpen ? 'hidden lg:inline' : 'inline'}`}>
-              {isRefreshing ? 'রিফ্রেশ হচ্ছে...' : 'শিট থেকে রিফ্রেশ'}
+              {isRefreshing ? 'রিফ্রেশ হচ্ছে...' : 'ভিডিও রিফ্রেশ'}
             </span>
           </button>
         </div>
