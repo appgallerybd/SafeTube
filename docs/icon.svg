@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="safeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF0033" />
+      <stop offset="50%" stop-color="#E50914" />
+      <stop offset="100%" stop-color="#8B0000" />
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#FF0033" flood-opacity="0.45" />
+    </filter>
+  </defs>
+
+  <!-- Background with squircle -->
+  <rect width="512" height="512" rx="128" fill="#0A0A0C" />
+  
+  <!-- Outer glowing accent ring -->
+  <rect x="16" y="16" width="480" height="480" rx="112" fill="none" stroke="url(#safeGrad)" stroke-width="4" stroke-opacity="0.6" />
+
+  <!-- Inner safe shield plate -->
+  <g filter="url(#glow)">
+    <!-- Center Tube Screen / Shield container -->
+    <rect x="76" y="96" width="360" height="320" rx="64" fill="url(#safeGrad)" />
+    
+    <!-- Audio Wave / Shield accents -->
+    <!-- Left audio bar -->
+    <rect x="130" y="216" width="12" height="80" rx="6" fill="#FFFFFF" opacity="0.85" />
+    <rect x="154" y="186" width="12" height="140" rx="6" fill="#FFFFFF" opacity="0.9" />
+
+    <!-- Play Button (YouTube style) centered -->
+    <polygon points="220,180 340,256 220,332" fill="#FFFFFF" />
+
+    <!-- Right audio bar -->
+    <rect x="346" y="186" width="12" height="140" rx="6" fill="#FFFFFF" opacity="0.9" />
+    <rect x="370" y="216" width="12" height="80" rx="6" fill="#FFFFFF" opacity="0.85" />
+
+    <!-- Safe Shield Check Badge at top right -->
+    <circle cx="396" cy="120" r="34" fill="#0A0A0C" stroke="#22C55E" stroke-width="6" />
+    <path d="M384 120 L393 129 L410 110" fill="none" stroke="#22C55E" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+</svg>
