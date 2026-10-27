@@ -1,4 +1,4 @@
-import { GOOGLE_SHEET_CONFIG, DEFAULT_SAFE_VIDEOS } from '../config/sheetConfig';
+import { GOOGLE_SHEET_CONFIG } from '../config/sheetConfig';
 import { SafeVideo } from '../types/video';
 
 const STORAGE_KEY_VIDEOS = 'safetube_videos_cache';
@@ -178,9 +178,9 @@ export async function fetchVideosFromGoogleSheet(forceRefresh = false): Promise<
   // কোডের ফাইল (sheetConfig.ts) থেকে সরাসরি গুগল শিট লিঙ্ক নেওয়া
   const sheetUrl = GOOGLE_SHEET_CONFIG.CSV_URL.trim();
 
-  // যদি কোনো শিট লিঙ্ক কনফিগার না থাকে, সরাসরি ডিফল্ট সেফ ভিডিও ফেরত দিন
+  // যদি কোনো শিট লিঙ্ক কনফিগার না থাকে, খালি তালিকা ফেরত দিন
   if (!sheetUrl) {
-    return DEFAULT_SAFE_VIDEOS;
+    return [];
   }
 
   // লিঙ্ক পরিবর্তন হলে স্বয়ংক্রিয়ভাবে ক্যাশ বাতিল করে নতুন লিঙ্ক ফেচ করবে
@@ -201,11 +201,17 @@ export async function fetchVideosFromGoogleSheet(forceRefresh = false): Promise<
       const cached = localStorage.getItem(STORAGE_KEY_VIDEOS);
       const timestamp = localStorage.getItem(STORAGE_KEY_TIMESTAMP);
       if (cached && timestamp) {
-        const age = (Date.now() - parseInt(timestamp, 10)) / (1000 * 60);
-        if (age < GOOGLE_SHEET_CONFIG.CACHE_REFRESH_MINUTES) {
-          const parsed = JSON.parse(cached) as SafeVideo[];
-          if (parsed && parsed.length > 0) {
-            return parsed;
+        const parsed = JSON.parse(cached) as SafeVideo[];
+        // Check if cache contains old mock videos (e.g. Bohemian Rhapsody 'fJ9rUzIMcZQ')
+        const hasOldMock = parsed.some((v) => v.id === 'fJ9rUzIMcZQ' || v.id === 'LXb3EKWsInQ');
+        if (hasOldMock) {
+          localStorage.removeItem(STORAGE_KEY_VIDEOS);
+        } else {
+          const age = (Date.now() - parseInt(timestamp, 10)) / (1000 * 60);
+          if (age < GOOGLE_SHEET_CONFIG.CACHE_REFRESH_MINUTES) {
+            if (parsed && parsed.length > 0) {
+              return parsed;
+            }
           }
         }
       }
@@ -220,13 +226,13 @@ export async function fetchVideosFromGoogleSheet(forceRefresh = false): Promise<
     const rows = parseCSV(csvText);
 
     if (rows.length === 0) {
-      return DEFAULT_SAFE_VIDEOS;
+      return [];
     }
 
-    // ৪. হেডার সনাক্তকরণ
-    const headerRow = rows[0].map((h) => h.toLowerCase());
+    // ৪. হেডার সনাক্তকরণ (স্পেস ট্রিম করে নিখুঁত ম্যাচিং)
+    const headerRow = rows[0].map((h) => h.trim().toLowerCase());
     const hasHeader = headerRow.some((h) =>
-      ['url', 'link', 'video', 'youtube', 'title', 'channel', 'category', 'লিংক', 'ভিডিও'].some((keyword) =>
+      ['url', 'link', 'video', 'youtube', 'title', 'channel', 'category', 'লিংক', 'ভিডিও', 'শিরোনাম', 'ক্যাটাগরি'].some((keyword) =>
         h.includes(keyword)
       )
     );
@@ -254,7 +260,9 @@ export async function fetchVideosFromGoogleSheet(forceRefresh = false): Promise<
           col.includes('channel') ||
           col.includes('author') ||
           col.includes('creator') ||
-          col.includes('চ্যানেল')
+          col.includes('চ্যানেল') ||
+          col.includes('ক্বারী') ||
+          col.includes('কারী')
         )
           channelColIdx = idx;
         else if (col.includes('cat') || col.includes('genre') || col.includes('ট্যাগ') || col.includes('ক্যাটাগরি'))
@@ -309,13 +317,13 @@ export async function fetchVideosFromGoogleSheet(forceRefresh = false): Promise<
         parsedVideos.push({
           id: videoId,
           title: rawTitle.trim() || `নিরাপদ ভিডিও #${index + 1}`,
-          channel: rawChannel.trim() || 'Safe Channel',
-          category: rawCategory.trim() || 'সাধারণ',
+          channel: rawChannel.trim() || rawCategory.trim() || 'SafeTube',
+          category: rawCategory.trim() || 'কুরআন তেলাওয়াত',
           duration: rawDuration.trim() || 'HD',
           description: rawDesc.trim() || 'নিরাপদ ভিডিও স্ট্রিম (SafeTube Player)',
           url: `https://www.youtube.com/watch?v=${videoId}`,
           thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-          views: `${Math.floor(Math.random() * 80 + 10)}K views`,
+          views: `নিরাপদ স্ট্রিম`,
         });
       }
     });
@@ -332,9 +340,9 @@ export async function fetchVideosFromGoogleSheet(forceRefresh = false): Promise<
       return parsedVideos;
     }
 
-    return DEFAULT_SAFE_VIDEOS;
+    return [];
   } catch (err) {
-    console.warn('Google Sheet loading error, using safe fallback collection:', err);
-    return DEFAULT_SAFE_VIDEOS;
+    console.warn('Google Sheet loading error:', err);
+    return [];
   }
 }
