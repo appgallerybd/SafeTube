@@ -28,7 +28,7 @@ import { SafeVideo } from '../types/video';
 
 export const GOOGLE_SHEET_CONFIG = {
   // এখানে আপনার গুগল শিটের পাবলিশড CSV লিংক দিন (খালি রাখলে নিচের নিরাপদ ডিফল্ট ভিডিওগুলো চলবে)
-  CSV_URL: '',
+  CSV_URL: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ4FD-ObrJVSkkKm_kTqCr9JQF462qqFnGhmX3IEYeeGfOsyqy0dz3xap7IyQWqbtgfgBCLME1wCAga/pub?gid=0&single=true&output=csv',
 
   // অটো-রিফ্রেশ ইন্টারভাল (মিনিট হিসেবে, ডিফল্ট ১০ মিনিট)
   CACHE_REFRESH_MINUTES: 10,
