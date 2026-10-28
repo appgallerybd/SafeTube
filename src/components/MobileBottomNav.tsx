@@ -21,7 +21,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
     },
     {
       id: 'audio',
-      label: 'অডিও মোড',
+      label: 'অডিও',
       icon: <Headphones className="h-5 w-5" />,
     },
     {

@@ -22,7 +22,7 @@ export const CategoryChips: React.FC<CategoryChipsProps> = ({
   };
 
   return (
-    <div className="relative sticky top-16 z-20 flex w-full items-center border-b bg-white/95 px-3 py-2.5 backdrop-blur-sm border-neutral-200 dark:bg-[#0f0f0f]/95 dark:border-neutral-800">
+    <div className="relative sticky top-14 sm:top-16 z-20 flex w-full items-center border-b bg-white/95 px-3 py-2 backdrop-blur-sm border-neutral-200 dark:bg-[#0f0f0f]/95 dark:border-neutral-800">
       {/* Scroll Left Button */}
       <button
         onClick={() => scroll('left')}

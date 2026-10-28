@@ -7,7 +7,6 @@ import {
   MoreVertical,
   Check,
   Share2,
-  ShieldCheck,
 } from 'lucide-react';
 import { SafeVideo } from '../types/video';
 
@@ -44,37 +43,35 @@ export const VideoCard: React.FC<VideoCardProps> = ({
     }, 1500);
   };
 
-  // Get first letter of channel for avatar
   const channelInitial = video.channel ? video.channel.charAt(0).toUpperCase() : 'S';
 
   return (
     <div
       onClick={() => onSelectVideo(video, 'video')}
-      className={`group relative flex flex-col cursor-pointer transition-all duration-200 ${
-        isCurrentlyPlaying ? 'ring-2 ring-red-500/80 rounded-2xl p-1 bg-red-500/5' : ''
+      className={`group relative flex flex-col cursor-pointer transition-all duration-150 ${
+        isCurrentlyPlaying ? 'ring-2 ring-red-600 rounded-2xl p-1 bg-red-600/5' : ''
       }`}
     >
-      {/* Thumbnail Container */}
-      <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-neutral-900 shadow-sm">
+      {/* 16:9 Thumbnail Container */}
+      <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-neutral-900 shadow-xs">
         <img
           src={video.thumbnail || `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`}
           alt={video.title}
           loading="lazy"
-          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-200 group-hover:scale-102"
           onError={(e) => {
-            // fallback to mqdefault if hqdefault fails
             (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.id}/mqdefault.jpg`;
           }}
         />
 
         {/* Hover play gradient overlay */}
         <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-600/90 text-white shadow-lg backdrop-blur-xs transform scale-90 group-hover:scale-100 transition-transform">
-            <Play className="h-6 w-6 fill-current ml-0.5" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-600 text-white shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+            <Play className="h-5 w-5 fill-current ml-0.5" />
           </div>
         </div>
 
-        {/* Currently Playing indicator badge */}
+        {/* Currently Playing Badge */}
         {isCurrentlyPlaying && (
           <div className="absolute top-2 left-2 flex items-center gap-1.5 rounded-md bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-md animate-pulse">
             <span className="h-1.5 w-1.5 rounded-full bg-white" />
@@ -82,39 +79,33 @@ export const VideoCard: React.FC<VideoCardProps> = ({
           </div>
         )}
 
-        {/* Safe Badge */}
-        <div className="absolute top-2 right-2 flex items-center gap-1 rounded-md bg-black/60 backdrop-blur-xs px-1.5 py-0.5 text-[10px] font-medium text-emerald-400">
-          <ShieldCheck className="h-3 w-3" />
-          <span>নিরাপদ</span>
-        </div>
-
-        {/* Duration Badge */}
-        <div className="absolute bottom-2 right-2 rounded-md bg-black/80 backdrop-blur-xs px-1.5 py-0.5 text-[11px] font-semibold text-white">
+        {/* Duration Badge (bottom right) */}
+        <div className="absolute bottom-1.5 right-1.5 rounded-md bg-black/85 px-1.5 py-0.5 text-[11px] font-bold text-white tracking-tight">
           {video.duration || 'HD'}
         </div>
 
-        {/* Quick Audio Play Button on thumbnail */}
+        {/* Quick Audio Play Button (bottom left) */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             onSelectVideo(video, 'audio');
           }}
-          title="শুধুমাত্র অডিও শুনুন"
-          className="absolute bottom-2 left-2 flex h-7 items-center gap-1 rounded-md bg-black/75 backdrop-blur-xs px-2 text-[11px] font-medium text-neutral-200 hover:bg-red-600 hover:text-white transition opacity-90 group-hover:opacity-100"
+          title="অডিও শুনুন"
+          className="absolute bottom-1.5 left-1.5 flex h-6 items-center gap-1 rounded-md bg-black/80 px-2 text-[10px] font-semibold text-white hover:bg-red-600 transition"
         >
-          <Headphones className="h-3.5 w-3.5" />
-          <span className="hidden group-hover:inline text-[10px]">অডিও</span>
+          <Headphones className="h-3 w-3" />
+          <span>অডিও</span>
         </button>
       </div>
 
-      {/* Video Details */}
+      {/* Video Details row */}
       <div className="mt-2.5 flex items-start gap-2.5 px-0.5">
         {/* Channel Avatar */}
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-neutral-700 to-neutral-900 text-xs font-bold text-white shadow-xs">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-neutral-800 to-neutral-700 text-xs font-bold text-white shadow-xs">
           {channelInitial}
         </div>
 
-        {/* Title, Channel & Meta */}
+        {/* Title & Metadata */}
         <div className="flex-1 min-w-0">
           <h3
             title={video.title}
@@ -124,14 +115,14 @@ export const VideoCard: React.FC<VideoCardProps> = ({
           </h3>
 
           <div className="mt-1 flex items-center gap-1 text-xs text-neutral-600 dark:text-neutral-400">
-            <span className="truncate max-w-[150px]">{video.channel}</span>
+            <span className="truncate">{video.channel}</span>
             <Check className="h-3 w-3 text-neutral-400 shrink-0" />
           </div>
 
-          <div className="mt-0.5 flex items-center gap-2 text-[11px] text-neutral-500 dark:text-neutral-400">
+          <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-neutral-500 dark:text-neutral-400">
             <span>{video.views || 'নিরাপদ স্ট্রিম'}</span>
             <span>•</span>
-            <span className="rounded bg-neutral-100 px-1.5 py-0.2 text-[10px] text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
+            <span className="rounded bg-neutral-100 px-1.5 py-0.2 text-[10px] font-medium text-neutral-600 dark:bg-neutral-800 dark:text-neutral-300">
               {video.category}
             </span>
           </div>
@@ -145,12 +136,11 @@ export const VideoCard: React.FC<VideoCardProps> = ({
               setMenuOpen(!menuOpen);
             }}
             aria-label="Options"
-            className="rounded-full p-1 text-neutral-500 hover:bg-neutral-200 dark:text-neutral-400 dark:hover:bg-neutral-800 transition"
+            className="rounded-full p-1 text-neutral-500 hover:bg-neutral-100 dark:text-neutral-400 dark:hover:bg-neutral-800 transition"
           >
             <MoreVertical className="h-4 w-4" />
           </button>
 
-          {/* Dropdown Menu */}
           {menuOpen && (
             <>
               <div
@@ -162,17 +152,17 @@ export const VideoCard: React.FC<VideoCardProps> = ({
               />
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-6 z-30 w-48 rounded-xl border border-neutral-200 bg-white p-1.5 shadow-xl dark:border-neutral-800 dark:bg-neutral-900 animate-in fade-in zoom-in-95 duration-100"
+                className="absolute right-0 top-6 z-30 w-44 rounded-xl border border-neutral-200 bg-white p-1.5 shadow-xl dark:border-neutral-800 dark:bg-neutral-900 animate-in fade-in zoom-in-95 duration-100"
               >
                 <button
                   onClick={() => {
                     onSelectVideo(video, 'audio');
                     setMenuOpen(false);
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
                 >
-                  <Headphones className="h-4 w-4 text-red-500" />
-                  <span>শুধু অডিও শুনুন</span>
+                  <Headphones className="h-3.5 w-3.5 text-red-600" />
+                  <span>অডিও শুনুন</span>
                 </button>
 
                 <button
@@ -180,12 +170,12 @@ export const VideoCard: React.FC<VideoCardProps> = ({
                     onToggleFavorite(video);
                     setMenuOpen(false);
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
                 >
                   <Heart
-                    className={`h-4 w-4 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-neutral-500'}`}
+                    className={`h-3.5 w-3.5 ${isFavorite ? 'fill-red-500 text-red-500' : 'text-neutral-500'}`}
                   />
-                  <span>{isFavorite ? 'পছন্দ থেকে মুছুন' : 'পছন্দের তালিকায় যুক্ত করুন'}</span>
+                  <span>{isFavorite ? 'পছন্দ থেকে মুছুন' : 'পছন্দে রাখুন'}</span>
                 </button>
 
                 <button
@@ -193,24 +183,24 @@ export const VideoCard: React.FC<VideoCardProps> = ({
                     onToggleWatchLater(video);
                     setMenuOpen(false);
                   }}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
                 >
                   <BookmarkCheck
-                    className={`h-4 w-4 ${isWatchLater ? 'text-amber-500' : 'text-neutral-500'}`}
+                    className={`h-3.5 w-3.5 ${isWatchLater ? 'text-amber-500' : 'text-neutral-500'}`}
                   />
-                  <span>{isWatchLater ? 'পরে দেখুন থেকে সরান' : 'পরে দেখুন তালিকায় রাখুন'}</span>
+                  <span>{isWatchLater ? 'পরে দেখুন থেকে মুছুন' : 'পরে দেখুন'}</span>
                 </button>
 
                 <button
                   onClick={handleCopy}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs font-medium text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-100 dark:text-neutral-200 dark:hover:bg-neutral-800"
                 >
                   {copied ? (
-                    <Check className="h-4 w-4 text-emerald-500" />
+                    <Check className="h-3.5 w-3.5 text-emerald-500" />
                   ) : (
-                    <Share2 className="h-4 w-4 text-neutral-500" />
+                    <Share2 className="h-3.5 w-3.5 text-neutral-500" />
                   )}
-                  <span>{copied ? 'লিঙ্ক কপি হয়েছে!' : 'ভিডিও লিঙ্ক কপি করুন'}</span>
+                  <span>{copied ? 'কপি হয়েছে' : 'শেয়ার করুন'}</span>
                 </button>
               </div>
             </>

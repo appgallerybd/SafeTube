@@ -524,23 +524,23 @@ export default function App() {
 
               {/* Feed Header for Library Views */}
               {currentTab === 'favorites' && (
-                <div className="px-4 sm:px-6 pt-5 pb-1 flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-red-500 fill-current" />
-                  <h2 className="text-base sm:text-lg font-bold">পছন্দের সুরা তালিকা ({filteredVideos.length})</h2>
+                <div className="px-3 sm:px-6 pt-4 pb-1 flex items-center gap-2">
+                  <Heart className="h-4 w-4 text-red-600 fill-current" />
+                  <h2 className="text-base sm:text-lg font-bold">পছন্দ ({filteredVideos.length})</h2>
                 </div>
               )}
 
               {currentTab === 'watch_later' && (
-                <div className="px-4 sm:px-6 pt-5 pb-1 flex items-center gap-2">
-                  <BookmarkCheck className="h-5 w-5 text-amber-500" />
-                  <h2 className="text-base sm:text-lg font-bold">পরে শুনুন / দেখুন ({filteredVideos.length})</h2>
+                <div className="px-3 sm:px-6 pt-4 pb-1 flex items-center gap-2">
+                  <BookmarkCheck className="h-4 w-4 text-amber-500" />
+                  <h2 className="text-base sm:text-lg font-bold">পরে দেখুন ({filteredVideos.length})</h2>
                 </div>
               )}
 
               {currentTab === 'history' && (
-                <div className="px-4 sm:px-6 pt-5 pb-1 flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-blue-500" />
-                  <h2 className="text-base sm:text-lg font-bold">সম্প্রতি শোনা সুরাসমূহ ({filteredVideos.length})</h2>
+                <div className="px-3 sm:px-6 pt-4 pb-1 flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-blue-500" />
+                  <h2 className="text-base sm:text-lg font-bold">হিস্ট্রি ({filteredVideos.length})</h2>
                 </div>
               )}
 
