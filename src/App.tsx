@@ -23,11 +23,11 @@ const STORAGE_KEY_HISTORY = 'safetube_history';
 const STORAGE_KEY_THEME = 'safetube_theme';
 
 export default function App() {
-  // Theme state: default dark mode like modern YouTube
+  // Theme state: default dark mode
   const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
     const saved = localStorage.getItem(STORAGE_KEY_THEME);
     if (saved !== null) return saved === 'dark';
-    return true; // default dark
+    return true;
   });
 
   // Data states
@@ -41,12 +41,16 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [isPlayerMinimized, setIsPlayerMinimized] = useState<boolean>(false);
 
+  // Time tracking for seekbar
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
+
   // Sleep timer states
   const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number>(0);
   const [sleepTimeRemaining, setSleepTimeRemaining] = useState<number | null>(null);
   const [sleepTimerToast, setSleepTimerToast] = useState<string | null>(null);
 
-  // Set sleep timer helper (15, 30, 45, 60 mins or 0 to turn off)
+  // Set sleep timer helper
   const handleSetSleepTimer = useCallback((minutes: number) => {
     setSleepTimerMinutes(minutes);
     if (minutes > 0) {
@@ -60,9 +64,7 @@ export default function App() {
     }
   }, []);
 
-  // Fully functional sleep timer countdown logic in App.tsx:
-  // Decrements remaining seconds while isPlaying is true.
-  // When timer hits 0, it automatically stops playback and sets isPlaying to false.
+  // Sleep timer countdown
   useEffect(() => {
     let interval: any = null;
 
@@ -73,9 +75,16 @@ export default function App() {
             return sleepTimerMinutes * 60;
           }
           if (prev <= 1) {
-            // STOP PLAYBACK and set isPlaying to false!
+            // STOP PLAYBACK when timer hits 0
             setIsPlaying(false);
             setSleepTimerMinutes(0);
+            const iframe = document.getElementById(`safetube-player-${currentVideo?.id}`) as HTMLIFrameElement;
+            if (iframe?.contentWindow) {
+              iframe.contentWindow.postMessage(
+                JSON.stringify({ event: 'command', func: 'pauseVideo', args: '' }),
+                '*'
+              );
+            }
             setSleepTimerToast('⏰ স্লিপ টাইমার সমাপ্ত: অডিও প্লেব্যাক স্বয়ংক্রিয়ভাবে বন্ধ করা হয়েছে।');
             setTimeout(() => setSleepTimerToast(null), 5000);
             return null;
@@ -90,7 +99,7 @@ export default function App() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [sleepTimerMinutes, isPlaying]);
+  }, [sleepTimerMinutes, isPlaying, currentVideo?.id]);
 
   // Navigation and filtering
   const [currentTab, setCurrentTab] = useState<NavTab>('home');
@@ -160,7 +169,15 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    loadVideos();
+    try {
+      localStorage.removeItem('safetube_videos_cache');
+      localStorage.removeItem('safetube_videos_timestamp');
+      localStorage.removeItem('safetube_custom_sheet_url');
+      localStorage.removeItem('safetube_last_sheet_url');
+    } catch {
+      // ignore
+    }
+    loadVideos(true);
   }, [loadVideos]);
 
   // Save library changes
@@ -200,7 +217,7 @@ export default function App() {
     // Add to history
     setHistory((prev) => [video.id, ...prev.filter((id) => id !== video.id)]);
 
-    // If audio mode selected, switch tab to audio if user wants or keep focused
+    // If audio mode selected, switch tab to audio
     if (mode === 'audio') {
       setCurrentTab('audio');
     }
@@ -224,18 +241,84 @@ export default function App() {
   };
 
   const handleTogglePlay = () => {
-    setIsPlaying((prev) => !prev);
+    const next = !isPlaying;
+    setIsPlaying(next);
+    const iframe = document.getElementById(`safetube-player-${currentVideo?.id}`) as HTMLIFrameElement;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage(
+        JSON.stringify({
+          event: 'command',
+          func: next ? 'playVideo' : 'pauseVideo',
+          args: '',
+        }),
+        '*'
+      );
+    }
   };
 
-  // MediaSession API setup for background audio & lock screen controls
+  const handleSeekBackward = () => {
+    const target = Math.max(0, currentTime - 10);
+    handleSeekTo(target);
+  };
+
+  const handleSeekForward = () => {
+    const target = Math.min(duration || 99999, currentTime + 10);
+    handleSeekTo(target);
+  };
+
+  const handleSeekTo = (targetSec: number) => {
+    const iframe = document.getElementById(`safetube-player-${currentVideo?.id}`) as HTMLIFrameElement;
+    if (iframe?.contentWindow) {
+      iframe.contentWindow.postMessage(
+        JSON.stringify({ event: 'command', func: 'seekTo', args: [targetSec, true] }),
+        '*'
+      );
+      setCurrentTime(targetSec);
+    }
+  };
+
+  // MediaSession API setup for mobile lock screen & background controls
   useMediaSession({
     currentVideo,
     isPlaying,
-    onPlay: () => setIsPlaying(true),
-    onPause: () => setIsPlaying(false),
+    onPlay: () => {
+      setIsPlaying(true);
+      const iframe = document.getElementById(`safetube-player-${currentVideo?.id}`) as HTMLIFrameElement;
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: '' }), '*');
+      }
+    },
+    onPause: () => {
+      setIsPlaying(false);
+      const iframe = document.getElementById(`safetube-player-${currentVideo?.id}`) as HTMLIFrameElement;
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'pauseVideo', args: '' }), '*');
+      }
+    },
     onNext: handleNext,
     onPrevious: handlePrevious,
+    onSeekForward: handleSeekForward,
+    onSeekBackward: handleSeekBackward,
   });
+
+  // Keyboard shortcuts (Desktop)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement)?.tagName)) return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        handleTogglePlay();
+      } else if (e.code === 'ArrowLeft') {
+        e.preventDefault();
+        handleSeekBackward();
+      } else if (e.code === 'ArrowRight') {
+        e.preventDefault();
+        handleSeekForward();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isPlaying, currentTime, duration, currentVideo]);
 
   // Extract unique categories from videos
   const categories = useMemo(() => {
@@ -251,32 +334,27 @@ export default function App() {
   const filteredVideos = useMemo(() => {
     let list = videos;
 
-    // Tab filtering
     if (currentTab === 'favorites') {
       list = list.filter((v) => favorites.includes(v.id));
     } else if (currentTab === 'watch_later') {
       list = list.filter((v) => watchLater.includes(v.id));
     } else if (currentTab === 'history') {
-      // Order by history
       list = history
         .map((id) => videos.find((v) => v.id === id))
-        .filter((v): v is SafeVideo => !!v);
+        .filter((v): v is SafeVideo => v !== undefined);
     }
 
-    // Category filtering
     if (selectedCategory !== 'সব') {
-      list = list.filter((v) => v.category === selectedCategory);
+      list = list.filter((v) => v.category?.trim() === selectedCategory);
     }
 
-    // Search query filtering
-    if (searchQuery.trim().length > 0) {
+    if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       list = list.filter(
         (v) =>
           v.title.toLowerCase().includes(q) ||
           v.channel.toLowerCase().includes(q) ||
-          v.category.toLowerCase().includes(q) ||
-          (v.description && v.description.toLowerCase().includes(q))
+          v.category.toLowerCase().includes(q)
       );
     }
 
@@ -284,24 +362,35 @@ export default function App() {
   }, [videos, currentTab, favorites, watchLater, history, selectedCategory, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-[#0f0f0f] dark:text-neutral-100 flex flex-col font-sans transition-colors duration-200">
-      {/* 1. Header */}
+    <div className="min-h-screen bg-neutral-50 text-neutral-900 transition-colors duration-200 dark:bg-[#0f0f0f] dark:text-neutral-100 flex flex-col font-sans selection:bg-red-500 selection:text-white">
+      {/* Offline Status Bar */}
+      <OfflineIndicator />
+
+      {/* Sleep Timer Toast Banner */}
+      {sleepTimerToast && (
+        <div className="fixed top-18 right-4 z-50 rounded-2xl bg-neutral-900 px-4 py-2.5 text-xs font-semibold text-white shadow-2xl dark:bg-white dark:text-neutral-900 animate-in slide-in-from-top-2 duration-200 border border-neutral-700/50">
+          {sleepTimerToast}
+        </div>
+      )}
+
+      {/* 1. Header Navigation */}
       <Header
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         isDarkMode={isDarkMode}
         toggleDarkMode={toggleDarkMode}
-        isAudioMode={playbackMode === 'audio'}
+        isAudioMode={playbackMode === 'audio' || currentTab === 'audio'}
         toggleAudioMode={() => {
-          if (playbackMode === 'video') {
+          if (playbackMode === 'audio' || currentTab === 'audio') {
+            setPlaybackMode('video');
+            setCurrentTab('home');
+            setIsPlayerMinimized(false);
+          } else {
             setPlaybackMode('audio');
             setCurrentTab('audio');
             if (!currentVideo && videos.length > 0) {
               handleSelectVideo(videos[0], 'audio');
             }
-          } else {
-            setPlaybackMode('video');
-            setCurrentTab('home');
           }
         }}
         onOpenInstall={() => setInstallModalOpen(true)}
@@ -314,8 +403,8 @@ export default function App() {
         onSetSleepTimer={handleSetSleepTimer}
       />
 
-      <div className="flex flex-1">
-        {/* 2. Sidebar Navigation */}
+      <div className="flex flex-1 relative">
+        {/* 2. Responsive Sidebar (Mobile drawer / Tablet icon-rail / Desktop drawer) */}
         <Sidebar
           currentTab={currentTab}
           onSelectTab={(tab) => {
@@ -325,8 +414,6 @@ export default function App() {
               if (!currentVideo && videos.length > 0) {
                 handleSelectVideo(videos[0], 'audio');
               }
-            } else if (tab === 'home' && playbackMode === 'audio') {
-              // keep playing in background
             }
           }}
           isOpen={sidebarOpen}
@@ -336,9 +423,71 @@ export default function App() {
           isRefreshing={isRefreshing}
         />
 
-        {/* 3. Main Content Area */}
-        <main className="flex-1 md:pl-20 lg:pl-60 pb-20 md:pb-8 transition-all overflow-x-hidden">
-          {/* A. If user is in Audio Mode Tab */}
+        {/* 
+          3. Main Content Area
+          Responsive Padding:
+          - Mobile (< 768px): pl-0, pb-24 (space for mobile bottom nav + miniplayer)
+          - Tablet (768px - 1024px): md:pl-20, pb-10
+          - Desktop (>= 1024px): lg:pl-60, pb-10
+        */}
+        <main className="flex-1 w-full md:pl-20 lg:pl-60 pb-24 md:pb-10 transition-all overflow-x-hidden">
+          {/* 
+            CRITICAL FOR SMOOTH 100% UNINTERRUPTED AUDIO:
+            SafePlayer (containing YouTube iframe) is ALWAYS MOUNTED whenever currentVideo exists!
+            - When on 'audio' tab or player is minimized: it is rendered in an off-screen background slot
+              so the browser KEEPS PLAYING AUDIO WITHOUT INTERRUPTION!
+            - When on other tabs and not minimized: it is displayed visibly at the top of the feed!
+          */}
+          {currentVideo && (
+            <div
+              className={
+                currentTab === 'audio' || isPlayerMinimized
+                  ? 'fixed -top-[9999px] -left-[9999px] w-1 h-1 opacity-0 pointer-events-none overflow-hidden'
+                  : 'border-b border-neutral-200 dark:border-neutral-800 bg-white/50 dark:bg-black/30 backdrop-blur-sm'
+              }
+            >
+              <div className="max-w-7xl mx-auto px-2 pt-2 pb-1 flex justify-end">
+                <button
+                  onClick={() => setIsPlayerMinimized(true)}
+                  className="text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 font-medium px-2 py-1 cursor-pointer flex items-center gap-1"
+                >
+                  <span>মিনিমাইজ করে ফিড দেখুন</span>
+                  <span>↓</span>
+                </button>
+              </div>
+
+              <SafePlayer
+                currentVideo={currentVideo}
+                playlist={videos}
+                playbackMode={playbackMode}
+                onTogglePlaybackMode={() => {
+                  const nextMode = playbackMode === 'video' ? 'audio' : 'video';
+                  setPlaybackMode(nextMode);
+                  if (nextMode === 'audio') {
+                    setCurrentTab('audio');
+                  }
+                }}
+                onSelectVideo={handleSelectVideo}
+                onClose={() => setCurrentVideo(null)}
+                isFavorite={favorites.includes(currentVideo.id)}
+                onToggleFavorite={handleToggleFavorite}
+                isWatchLater={watchLater.includes(currentVideo.id)}
+                onToggleWatchLater={handleToggleWatchLater}
+                isPlaying={isPlaying}
+                setIsPlaying={setIsPlaying}
+                sleepTimerMinutes={sleepTimerMinutes}
+                setSleepTimerMinutes={handleSetSleepTimer}
+                sleepTimeRemaining={sleepTimeRemaining}
+                onTimeUpdate={(cur, dur) => {
+                  setCurrentTime(cur);
+                  setDuration(dur);
+                }}
+                onMinimize={() => setIsPlayerMinimized(true)}
+              />
+            </div>
+          )}
+
+          {/* If user is in Dedicated Audio Mode Tab */}
           {currentTab === 'audio' ? (
             <AudioPlayerView
               currentVideo={currentVideo}
@@ -347,8 +496,8 @@ export default function App() {
               onTogglePlay={handleTogglePlay}
               onNext={handleNext}
               onPrevious={handlePrevious}
-              onSeekBackward={() => {}}
-              onSeekForward={() => {}}
+              onSeekBackward={handleSeekBackward}
+              onSeekForward={handleSeekForward}
               onSelectVideo={handleSelectVideo}
               onSwitchToVideo={() => {
                 setPlaybackMode('video');
@@ -360,72 +509,42 @@ export default function App() {
               sleepTimerMinutes={sleepTimerMinutes}
               setSleepTimerMinutes={handleSetSleepTimer}
               sleepTimeRemaining={sleepTimeRemaining}
+              currentTime={currentTime}
+              duration={duration}
+              onSeekTo={handleSeekTo}
             />
           ) : (
             <>
-              {/* B. Active Safe Player (When video is playing and not minimized) */}
-              {currentVideo && !isPlayerMinimized && (
-                <div className="border-b border-neutral-200 dark:border-neutral-800 bg-white/50 dark:bg-black/30 backdrop-blur-sm">
-                  <div className="max-w-7xl mx-auto px-2 pt-2 pb-1 flex justify-end">
-                    <button
-                      onClick={() => setIsPlayerMinimized(true)}
-                      className="text-xs text-neutral-500 hover:text-neutral-800 dark:hover:text-neutral-200 font-medium px-2 py-1 cursor-pointer"
-                    >
-                      মিনিমাইজ করে ফিড দেখুন ↓
-                    </button>
-                  </div>
-                  <SafePlayer
-                    currentVideo={currentVideo}
-                    playlist={videos}
-                    playbackMode={playbackMode}
-                    onTogglePlaybackMode={() =>
-                      setPlaybackMode((prev) => (prev === 'video' ? 'audio' : 'video'))
-                    }
-                    onSelectVideo={handleSelectVideo}
-                    onClose={() => setCurrentVideo(null)}
-                    isFavorite={favorites.includes(currentVideo.id)}
-                    onToggleFavorite={handleToggleFavorite}
-                    isWatchLater={watchLater.includes(currentVideo.id)}
-                    onToggleWatchLater={handleToggleWatchLater}
-                    isPlaying={isPlaying}
-                    setIsPlaying={setIsPlaying}
-                    sleepTimerMinutes={sleepTimerMinutes}
-                    setSleepTimerMinutes={handleSetSleepTimer}
-                    sleepTimeRemaining={sleepTimeRemaining}
-                  />
-                </div>
-              )}
-
-              {/* C. Category Chips Bar */}
+              {/* Category Chips Bar */}
               <CategoryChips
                 categories={categories}
                 selectedCategory={selectedCategory}
                 onSelectCategory={setSelectedCategory}
               />
 
-              {/* D. Feed Header for Library Views */}
+              {/* Feed Header for Library Views */}
               {currentTab === 'favorites' && (
                 <div className="px-4 sm:px-6 pt-5 pb-1 flex items-center gap-2">
                   <Heart className="h-5 w-5 text-red-500 fill-current" />
-                  <h2 className="text-lg font-bold">পছন্দের নিরাপদ ভিডিও ({filteredVideos.length})</h2>
+                  <h2 className="text-base sm:text-lg font-bold">পছন্দের সুরা তালিকা ({filteredVideos.length})</h2>
                 </div>
               )}
 
               {currentTab === 'watch_later' && (
                 <div className="px-4 sm:px-6 pt-5 pb-1 flex items-center gap-2">
                   <BookmarkCheck className="h-5 w-5 text-amber-500" />
-                  <h2 className="text-lg font-bold">পরে দেখুন তালিকা ({filteredVideos.length})</h2>
+                  <h2 className="text-base sm:text-lg font-bold">পরে শুনুন / দেখুন ({filteredVideos.length})</h2>
                 </div>
               )}
 
               {currentTab === 'history' && (
                 <div className="px-4 sm:px-6 pt-5 pb-1 flex items-center gap-2">
                   <Clock className="h-5 w-5 text-blue-500" />
-                  <h2 className="text-lg font-bold">সম্প্রতি দেখা ভিডিওসমূহ ({filteredVideos.length})</h2>
+                  <h2 className="text-base sm:text-lg font-bold">সম্প্রতি শোনা সুরাসমূহ ({filteredVideos.length})</h2>
                 </div>
               )}
 
-              {/* E. Video Grid */}
+              {/* Responsive Video Grid (1-col on mobile, 2-col on tablet, 3-4 col on desktop) */}
               <VideoGrid
                 videos={filteredVideos}
                 onSelectVideo={handleSelectVideo}
@@ -449,22 +568,25 @@ export default function App() {
       </div>
 
       {/* 4. Floating Mini Player (Shown when video is active and user browses feed minimized) */}
-      {currentVideo && (isPlayerMinimized || currentTab !== 'home') && currentTab !== 'audio' && (
+      {currentVideo && (isPlayerMinimized || (currentTab !== 'home' && currentTab !== 'audio')) && (
         <MiniPlayer
           video={currentVideo}
           isPlaying={isPlaying}
           onTogglePlay={handleTogglePlay}
           onExpand={() => {
             setIsPlayerMinimized(false);
-            if (currentTab !== 'home') setCurrentTab('home');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (playbackMode === 'audio') {
+              setCurrentTab('audio');
+            } else {
+              setCurrentTab('home');
+            }
           }}
           onClose={() => setCurrentVideo(null)}
           playbackMode={playbackMode}
         />
       )}
 
-      {/* 5. Mobile Bottom Navigation */}
+      {/* 5. Mobile Bottom Navigation (Only visible on screens < 768px) */}
       <MobileBottomNav
         currentTab={currentTab}
         onSelectTab={(tab) => {
@@ -479,19 +601,15 @@ export default function App() {
         favoritesCount={favorites.length}
       />
 
-      {/* 6. Offline status indicator */}
-      <OfflineIndicator />
-
-      {/* 7. Guided PWA Install Modal */}
+      {/* 6. Modals */}
       <PWAInstallModal
         isOpen={installModalOpen}
         onClose={() => setInstallModalOpen(false)}
-        isInstallable={isInstallable}
-        isIOS={isIOS}
         onInstall={install}
+        isIOS={isIOS}
+        isInstallable={isInstallable}
       />
 
-      {/* 8. Settings & Info Modal */}
       <SettingsModal
         isOpen={settingsModalOpen}
         onClose={() => setSettingsModalOpen(false)}
@@ -499,14 +617,6 @@ export default function App() {
         isRefreshing={isRefreshing}
         totalVideos={videos.length}
       />
-
-      {/* 9. Sleep Timer Notification Toast */}
-      {sleepTimerToast && (
-        <div className="fixed top-20 right-4 z-50 flex items-center gap-2.5 rounded-2xl bg-neutral-900/95 border border-red-500/50 px-4 py-2.5 text-xs font-semibold text-white shadow-2xl backdrop-blur-md animate-in slide-in-from-top-2 duration-200">
-          <span className="flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
-          <span>{sleepTimerToast}</span>
-        </div>
-      )}
     </div>
   );
 }

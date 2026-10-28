@@ -1,10 +1,9 @@
 import { GOOGLE_SHEET_CONFIG } from '../config/sheetConfig';
 import { SafeVideo } from '../types/video';
 
-const STORAGE_KEY_VIDEOS = 'safetube_videos_cache';
-const STORAGE_KEY_TIMESTAMP = 'safetube_videos_timestamp';
-const STORAGE_KEY_CUSTOM_URL = 'safetube_custom_sheet_url';
-const STORAGE_KEY_LAST_URL = 'safetube_last_sheet_url';
+const STORAGE_KEY_VIDEOS = 'safetube_videos_v5';
+const STORAGE_KEY_TIMESTAMP = 'safetube_videos_timestamp_v5';
+const STORAGE_KEY_LAST_URL = 'safetube_last_sheet_url_v5';
 
 /**
  * YouTube লিঙ্ক বা টেক্সট থেকে নিখুঁতভাবে ১১ অক্ষরের ভিডিও আইডি বের করার হেল্পার
