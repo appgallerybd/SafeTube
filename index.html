@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="bn" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>SafeTube - নিরাপদ ভিডিও ও ব্যাকগ্রাউন্ড অডিও প্লেয়ার</title>
-    <meta name="description" content="SafeTube - ডিস্ট্র্যাকশন-মুক্ত ও নিরাপদ ভিডিও স্ট্রিমিং ও অডিও ব্যাকগ্রাউন্ড প্লেয়ার PWA অ্যাপ। গুগল শিট ভিত্তিক কিউরেটেড ভিডিও এবং কোনো এক্সটার্নাল সাজেশন ছাড়া নিখুঁত অভিজ্ঞতা।" />
+    <meta name="description" content="SafeTube - ডিস্ট্র্যাকশন-মুক্ত ও নিরাপদ ভিডিও স্ট্রিমিং ও অডিও ব্যাকগ্রাউন্ড প্লেয়ার PWA অ্যাপ।" />
     <meta property="og:title" content="SafeTube - নিরাপদ ভিডিও ও ব্যাকগ্রাউন্ড অডিও প্লেয়ার" />
-    <meta property="og:description" content="SafeTube - ডিস্ট্র্যাকশন-মুক্ত ও নিরাপদ ভিডিও স্ট্রিমিং ও অডিও ব্যাকগ্রাউন্ড প্লেয়ার PWA অ্যাপ। কোনো এক্সটার্নাল রিকমেন্ডেশন ছাড়া।" />
+    <meta property="og:description" content="SafeTube - ডিস্ট্র্যাকশন-মুক্ত ও নিরাপদ ভিডিও স্ট্রিমিং ও অডিও ব্যাকগ্রাউন্ড প্লেয়ার PWA অ্যাপ।" />
     <meta property="og:type" content="website" />
     <meta name="theme-color" content="#0f0f0f" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -16,13 +16,19 @@
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <link rel="icon" type="image/svg+xml" href="./icon.svg" />
     <link rel="icon" type="image/x-icon" href="./favicon.ico" />
-    <link rel="preconnect" href="https://www.youtube.com" />
-    <link rel="preconnect" href="https://img.youtube.com" />
-    <script type="module" crossorigin src="./assets/index-CWv2N6_0.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-qa35q0E2.css">
+    <!-- Preconnect to YouTube, Google Video & Thumbnails for instant audio/video loading -->
+    <link rel="preconnect" href="https://www.youtube.com" crossorigin />
+    <link rel="preconnect" href="https://www.youtube-nocookie.com" crossorigin />
+    <link rel="preconnect" href="https://img.youtube.com" crossorigin />
+    <link rel="preconnect" href="https://i.ytimg.com" crossorigin />
+    <link rel="preconnect" href="https://googlevideo.com" crossorigin />
+    <link rel="dns-prefetch" href="https://www.youtube.com" />
+    <link rel="dns-prefetch" href="https://i.ytimg.com" />
+    <link rel="dns-prefetch" href="https://googlevideo.com" />
+    <script type="module" crossorigin src="./assets/index-CsEcdb8Y.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Bs_U5ZXB.css">
   <link rel="manifest" href="./manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="./registerSW.js"></script></head>
-  <body>
+  <body class="bg-white dark:bg-[#0f0f0f] text-neutral-900 dark:text-[#f1f1f1] antialiased">
     <div id="root"></div>
   </body>
 </html>
-
